@@ -1,0 +1,4 @@
+Flask
+openai==0.28
+gunicorn
+python-dotenv==1.0.1
