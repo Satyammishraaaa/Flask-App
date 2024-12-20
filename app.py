@@ -1,26 +1,21 @@
 from dotenv import load_dotenv
 import os
-
-def configure():
-    load_dotenv()
-
-
 import openai
 from flask import Flask, request, jsonify, render_template
 
-# Set your OpenAI API key
+# Load environment variables at the start of the app
+load_dotenv()
+
+# Check if the OpenAI API key is available
 openai.api_key = os.getenv("OPENAI_API_KEY")
+if not openai.api_key:
+    raise ValueError("OpenAI API key not found in environment variables.")
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return "Welcome to the Q&A Application!"
-
 ## FORM to ask question and get the answer
-@app.route('/form', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def form():
-    configure()
     answer = None  # Variable to store the answer
 
     if request.method == 'POST':
@@ -38,6 +33,8 @@ def form():
 
                 # Extract the answer from the response
                 answer = response['choices'][0]['message']['content']
+            except openai.error.AuthenticationError:
+                answer = "Authentication Error: Invalid API key."
             except Exception as e:
                 answer = f"Error occurred: {str(e)}"
     
@@ -45,4 +42,6 @@ def form():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    # Use dynamic port from environment variables for deployment
+    port = int(os.getenv("PORT", 8000))  # Default to 8000 if not set
+    app.run(host='0.0.0.0', port=port)
